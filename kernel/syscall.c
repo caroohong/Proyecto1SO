@@ -103,6 +103,8 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
+extern int sys_getreadcount(void);
+extern int read_calls;
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -126,6 +128,7 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_getreadcount]   sys_getreadcount,
 };
 
 void
@@ -135,6 +138,8 @@ syscall(void)
   struct proc *curproc = myproc();
 
   num = curproc->tf->eax;
+  if (num == 5) read_calls++;
+  
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     curproc->tf->eax = syscalls[num]();
   } else {
