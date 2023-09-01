@@ -16,7 +16,7 @@ initcode
 initcode.out
 kernelmemfs
 Makefile.test
-tests
+
 .gdbinit
 xv6.pdf
 fmt
