@@ -4,6 +4,6 @@
 #include "fcntl.h"
 
 int main(void){
-    printf(1, "Se ha llamada read %d veces\n", getreadcount());
+    printf(1, "Se ha llamado read %d veces\n", getreadcount());
     exit();
 }
