@@ -151,9 +151,10 @@ syscall(void)
 
   num = curproc->tf->eax;
 
-  acquire(&getreadcounttable);
+  initlock(&getreadcounttable, "getreadcounttable");
+  acquire(&getreadcounttable.lock);
   if (num == 5) read_calls++;
-  release(&getreadcounttable);
+  release(&getreadcounttable.lock);
   
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     curproc->tf->eax = syscalls[num]();
