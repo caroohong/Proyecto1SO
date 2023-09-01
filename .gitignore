@@ -11,7 +11,7 @@ bootblock
 entryother
 kernel/kernel
 mkfs/mkfs
-tests-out
+
 initcode
 initcode.out
 kernelmemfs
