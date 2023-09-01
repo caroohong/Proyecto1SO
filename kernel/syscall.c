@@ -6,6 +6,18 @@
 #include "proc.h"
 #include "x86.h"
 #include "syscall.h"
+#include "spinlock.h"
+
+struct {
+  struct spinlock lock;
+  struct proc proc[NPROC];
+} getreadcounttable;
+
+void
+readinit(void)
+{
+  initlock(&getreadcounttable.lock, "getreadcounttable");
+}
 
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
@@ -138,7 +150,10 @@ syscall(void)
   struct proc *curproc = myproc();
 
   num = curproc->tf->eax;
+
+  acquire(&getreadcounttable);
   if (num == 5) read_calls++;
+  release(&getreadcounttable);
   
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     curproc->tf->eax = syscalls[num]();
