@@ -1,3 +1,5 @@
+#include "pstat.h"
+#include "spinlock.h"
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID
@@ -49,7 +51,19 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  //lottery
+  int tickets;                 // Number of tickets
+  int ticks;                   // How many ticks this process has gone through
+  int inuse;                   // returns 0/1 if process is using the CPU
 };
+
+//hacer process table publica
+struct puclic_ptable
+{
+  struct spinlock lock;
+  struct proc proc[NPROC];
+};
+extern struct public_ptable ptable;
 
 // Process memory is laid out contiguously, low addresses first:
 //   text

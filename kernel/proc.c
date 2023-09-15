@@ -6,15 +6,20 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-
+//lottery
+#include "rand.h" //random
+#include "pstat.h"
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
 } ptable;
 
+
+//struct public_ptable ptable = {0};
 static struct proc *initproc;
 
 int nextpid = 1;
+unsigned int seed = 111; //para el random
 extern void forkret(void);
 extern void trapret(void);
 
@@ -25,7 +30,14 @@ pinit(void)
 {
   initlock(&ptable.lock, "ptable");
 }
-
+// int total_tickets;
+// void 
+// setproctickets(struct proc* p, int n)
+// {
+//   total_tickets -= p->tickets;
+//   p->tickets = n;
+//   total_tickets += p->tickets;
+// }
 // Must be called with interrupts disabled
 int
 cpuid() {
@@ -88,6 +100,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  //p->tickets = 1;
 
   release(&ptable.lock);
 
@@ -149,7 +162,8 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
-
+  p->tickets = 1;
+  p->ticks = 0;
   release(&ptable.lock);
 }
 
@@ -199,6 +213,9 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+  //proceso hijo tiene los mismos tickets que el padre
+  np->tickets = curproc->tickets;
+  np->ticks = 0;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -295,6 +312,8 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+        //p->ticks = 0;
+        //setproctickets(p, 0);
         release(&ptable.lock);
         return pid;
       }
@@ -323,32 +342,66 @@ void
 scheduler(void)
 {
   struct proc *p;
-  struct cpu *c = mycpu();
-  c->proc = 0;
+  // struct cpu *c = mycpu();
+  // c->proc = 0;
   
+  //Establecer tickets iniciales a 10
+  // acquire(&ptable.lock);
+  // setproctickets(ptable.proc, 10);
+  // release(&ptable.lock);
+
+  //unsigned long int next = 1;
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
-
-    // Loop over process table looking for process to run.
+    unsigned int totalTickets = 0; //tickets totales en procesos RUNNABLE 
+    unsigned int ticketCounter = 0; //cuenta cuantos tickets fueron procesados
+    // Calcular cantidad total de tickets en procesos RUNNABLE
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+      totalTickets += p->tickets;
+    }
+    //int runningTicketTotal = 0;
+    if(totalTickets == 0)
+    {
+      release(&ptable.lock);
+      continue;
+    }
+    //seed srand() para calcular ticket ganador
+    sgenrand(seed);
+    unsigned int winningTicket = random_at_most(totalTickets);
+    seed++;
 
+    //loop sobre tabla de procesos para buscar un proceso que ejecutar
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {
+      if (p->state != RUNNABLE) //skip-ear procesos no-RUNNABLE
+        continue;
+      ticketCounter += p->tickets;
+      if(ticketCounter < winningTicket) //si el proceso actual no es el ganador, continuar con el siguiente
+        continue;
+    
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      c->proc = p;
+      mycpu()->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
+      p->ticks++;
+      // p->inuse = 1;
+      // int tempTicks = ticks;
+      //Run process
+      swtch(&(mycpu()->scheduler), p->context);
+      // p->ticks += ticks - tempTicks;
       switchkvm();
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
-      c->proc = 0;
+      mycpu()->proc = 0;
+      break;
     }
     release(&ptable.lock);
 
@@ -531,4 +584,30 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int 
+getpinfo(struct pstat* procStat)
+{
+  struct proc *p;
+  int i = 0;
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    //Revisar si el proceso está unused, si está used, entonces inuse = 1
+    if (p->state == UNUSED)
+    {
+      procStat->inuse[i] = 0;
+    }
+    else
+    {
+      procStat->inuse[i] = 1;
+    }
+    procStat->tickets[i] = p->tickets;
+    procStat->pid[i] = p->pid;
+    procStat->ticks[i] = p->ticks;
+    i++;
+  }
+  release(&ptable.lock);
+  return 0;
 }

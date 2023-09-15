@@ -6,8 +6,50 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+//
+#include "pstat.h"
+#include "proc.h"
 int read_calls = -1;
 
+//extern const int total_tickets;
+
+int counter = 0;
+int
+sys_settickets(int number){
+  if(argint(0, number) < 0)
+  {
+    myproc()->tickets = 10; //darle 10 tickets iniciales al proceso
+  }
+  else
+  {
+    myproc()->tickets = number;
+  }
+  return 0;
+  // acquire(&ptable.lock);
+  // setproctickets(proc, number);
+  // release(&ptable.lock);
+}
+/*
+int 
+sys_getpinfo(struct pstat* target){
+  acquire(&public_ptable.lock);
+  if(argint(0,(int*)(&target)) < 0)
+  {
+    return -1;
+  }
+  for (struct proc* p = ptable-proc;p != &(ptable.proc[NPROC]);p++)
+  {
+    const int index = p - ptable.proc;
+    if(p->state != UNUSED)
+    {
+      target->pid[index] = p->pid;
+      target->ticks[index] = p->ticks;
+      target->tickets[index] = p->tickets;
+      //target
+    }
+  }
+}
+*/
 int
 sys_fork(void)
 {
