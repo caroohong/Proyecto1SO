@@ -586,28 +586,3 @@ procdump(void)
   }
 }
 
-int 
-getpinfo(struct pstat* procStat)
-{
-  struct proc *p;
-  int i = 0;
-  acquire(&ptable.lock);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-  {
-    //Revisar si el proceso está unused, si está used, entonces inuse = 1
-    if (p->state == UNUSED)
-    {
-      procStat->inuse[i] = 0;
-    }
-    else
-    {
-      procStat->inuse[i] = 1;
-    }
-    procStat->tickets[i] = p->tickets;
-    procStat->pid[i] = p->pid;
-    procStat->ticks[i] = p->ticks;
-    i++;
-  }
-  release(&ptable.lock);
-  return 0;
-}

@@ -1,3 +1,5 @@
+#ifndef _PROC_H
+#define _PROC_H
 #include "pstat.h"
 #include "spinlock.h"
 // Per-CPU state
@@ -70,3 +72,4 @@ extern struct public_ptable ptable;
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+#endif

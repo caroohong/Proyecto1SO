@@ -12,22 +12,44 @@
 int read_calls = -1;
 
 //extern const int total_tickets;
+struct {
+  struct spinlock lock;
+  struct proc proc[NPROC];
+} plock;
 
 int counter = 0;
 int
 sys_settickets(int number){
-  if(argint(0, number) < 0)
+  if(argint(0, number) < 0 || number < 1)
   {
-    myproc()->tickets = 10; //darle 10 tickets iniciales al proceso
+    return -1;
   }
   else
   {
+    acquire(&plock.lock);
     myproc()->tickets = number;
+    release(&plock.lock);
   }
   return 0;
-  // acquire(&ptable.lock);
-  // setproctickets(proc, number);
-  // release(&ptable.lock);
+}
+
+int 
+getpinfo(struct pstat* procStat)
+{
+  struct proc *p;
+  int i = 0;
+  if(argint(0, (int*)(&procStat))<0) return -1;
+  acquire(&plock.lock);
+  for(p = plock.proc; p < &plock.proc[NPROC]; p++)
+  {
+    procStat->inuse[i] = p->inuse;
+    procStat->tickets[i] = p->tickets;
+    procStat->pid[i] = p->pid;
+    procStat->ticks[i] = p->ticks;
+    i++;
+  }
+  release(&plock.lock);
+  return 0;
 }
 /*
 int 
