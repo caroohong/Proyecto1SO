@@ -214,7 +214,9 @@ fork(void)
   np->parent = curproc;
   *np->tf = *curproc->tf;
   //proceso hijo tiene los mismos tickets que el padre
+  acquire(&ptable.lock);
   np->tickets = curproc->tickets;
+  release(&ptable.lock);
   np->ticks = 0;
 
   // Clear %eax so that fork returns 0 in the child.
@@ -346,9 +348,9 @@ scheduler(void)
   // c->proc = 0;
   
   //Establecer tickets iniciales a 10
-  acquire(&ptable.lock);
-  settickets(10);
-  release(&ptable.lock);
+  //acquire(&ptable.lock);
+  //settickets(10);
+  //release(&ptable.lock);
 
   //unsigned long int next = 1;
 

@@ -124,6 +124,7 @@ void            wakeup(void*);
 void            yield(void);
 int             getreadcount(void);
 int             getpinfo(struct pstat*);
+int             settickets(int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

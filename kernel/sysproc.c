@@ -20,9 +20,10 @@ struct {
 int counter = 0;
 int
 sys_settickets(int number){
-  if(argint(0, number) < 0 || number < 1)
+  if(argint(0, &number) < 0 || number < 1)
   {
     return -1;
+    
   }
   else
   {
@@ -34,7 +35,7 @@ sys_settickets(int number){
 }
 
 int 
-getpinfo(struct pstat* procStat)
+sys_getpinfo(struct pstat* procStat)
 {
   struct proc *p;
   int i = 0;
