@@ -346,9 +346,9 @@ scheduler(void)
   // c->proc = 0;
   
   //Establecer tickets iniciales a 10
-  // acquire(&ptable.lock);
-  // setproctickets(ptable.proc, 10);
-  // release(&ptable.lock);
+  acquire(&ptable.lock);
+  settickets(10);
+  release(&ptable.lock);
 
   //unsigned long int next = 1;
 

@@ -60,12 +60,12 @@ struct proc {
 };
 
 //hacer process table publica
-struct puclic_ptable
-{
-  struct spinlock lock;
-  struct proc proc[NPROC];
-};
-extern struct public_ptable ptable;
+// struct puclic_ptable
+// {
+//   struct spinlock lock;
+//   struct proc proc[NPROC];
+// };
+// extern struct public_ptable ptable;
 
 // Process memory is laid out contiguously, low addresses first:
 //   text
